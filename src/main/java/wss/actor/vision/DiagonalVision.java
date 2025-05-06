@@ -9,6 +9,7 @@ import java.util.List;
 
 
 public class DiagonalVision extends Vision {
+    // See squares diagonally north-east, north-west, south-east, and south-west
     @Override
     protected List<VisibleSquare> scan(Map map, int x, int y) {
         List<VisibleSquare> list = new ArrayList<>();

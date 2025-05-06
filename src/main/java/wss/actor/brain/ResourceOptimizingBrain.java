@@ -7,7 +7,7 @@ import wss.world.Map;
 import java.util.List;
 
 public class ResourceOptimizingBrain extends Brain {
-
+    // Balance progress with nearby resources
     @Override
     public Direction makeMove(Player p, Map map) {
         if (p.getWater() <= 2) {

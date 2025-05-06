@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CautiousVision extends Vision {
+    // Only see squares directly north, south, east, and west
 
     @Override
     protected List<VisibleSquare> scan(Map map, int x, int y) {

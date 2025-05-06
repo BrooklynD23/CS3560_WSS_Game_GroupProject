@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FullVision extends Vision {
+    // All surrounding 8 squares
 
     @Override
     protected List<VisibleSquare> scan(Map map, int x, int y) {
