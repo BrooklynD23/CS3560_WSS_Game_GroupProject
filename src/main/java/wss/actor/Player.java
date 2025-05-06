@@ -3,125 +3,171 @@ package wss.actor;
 import wss.actor.brain.Brain;
 import wss.actor.vision.Vision;
 import wss.economy.Trader;
+import wss.economy.Trader.TradeResult;
 import wss.util.Direction;
+import wss.world.Square;
+import wss.world.Map;
+import wss.world.item.FoodBonus;
+import wss.world.item.WaterBonus;
+import wss.world.item.GoldBonus;
+import wss.world.item.Item;
+
+import java.util.List;
 
 public class Player {
     private int x, y;
-    private int maxStrength = 10, strength = 10;
-    private int maxWater = 10,    water    = 10;
-    private int maxFood  = 10,    food     = 10;
-    private int gold     = 0;
+    private int maxStrength = 10, strength = 20;
+    private int maxWater    = 10,    water    = 20;
+    private int maxFood     = 10,    food     = 20;
+    private int gold        = 5;
 
-    private final Brain brain;
-    private final Vision vision;
+    private final Brain   brain;
+    private final Vision  vision;
 
     public Player(int startX, int startY, Brain b, Vision v) {
-        this.x = startX; this.y = startY;
-        this.brain = b;  this.vision = v;
+        this.x = startX; 
+        this.y = startY;
+        this.brain = b;  
+        this.vision = v;
     }
 
-    public void takeTurn(wss.world.Map map) {
-        System.out.printf("Turn stats — Pos(%d,%d) Str:%d Water:%d Food:%d Gold:%d%n",
-                x, y, strength, water, food, gold);
-    
+    // In Player.java, replace your takeTurn method with:
+
+    public void takeTurn(Map map) {
+        // 1) Decide & move
         Direction dir = brain.makeMove(this, map);
-        System.out.println("Brain chose to move " + dir);
-    
         move(dir, map);
-    
-        consume();
+
+        // 2) Status report
+        System.out.printf("Player enters square %d,%d, Strength:%d, Food:%d, Water:%d, Gold:%d%n",
+                        x, y, strength, food, water, gold);
+        Square sq = map.getSquare(x, y);
+        System.out.println("This location is " + sq.getTerrain().getClass().getSimpleName());
+
+        // 3) Trade logic: only if low supplies AND you actually have gold
+        if (sq.hasTrader()) {
+            System.out.println("There is a trader.");
+            if (food > 3 && water > 3) {
+                System.out.println("I have enough supplies, so I skip the trader.");
+            } else if (gold > 0) {
+                System.out.println("I need supplies—let's trade!");
+                tradeWith(sq.getTrader());
+            } else {
+                System.out.println("I have no gold—can't trade. Skipping trader.");
+            }
+        }
+
+        // 4) End-of-turn resource drain so we eventually run out
+        consume();  // strength--, water--, food--
     }
 
-    // inside Player.java
-    private boolean canEnter(wss.world.Square s) {
-        var t = s.getTerrain();
-        return strength  >= t.getMovementCost()
-            && water     >= t.getWaterCost()
-            && food      >= t.getFoodCost();
-    }
 
-    private void move(Direction d, wss.world.Map map) {
-        int nx = x + d.dx();
-        int ny = y + d.dy();
+    private void move(Direction d, Map map) {
+        int nx = x + d.dx(), ny = y + d.dy();
         if (!inside(map, nx, ny)) {
-            System.out.println("Move blocked (out of bounds)");
+            System.out.println("Move " + d + " blocked (out of bounds).");
             return;
         }
-    
-        var destination = map.getSquare(nx, ny);
-        if (!canEnter(destination)) {
+
+        Square dest = map.getSquare(nx, ny);
+        if (!canEnter(dest)) {
             System.out.println("Not enough resources to move " + d);
             return;
         }
-    
-        int mc = destination.getTerrain().getMovementCost();
-        int wc = destination.getTerrain().getWaterCost();
-        int fc = destination.getTerrain().getFoodCost();
-    
-        // deduct terrain cost
-        strength -= mc;
-        water    -= wc;
-        food     -= fc;
-    
+
+        // 1) Deduct terrain costs
+        int mc = dest.getTerrain().getMovementCost();
+        int wc = dest.getTerrain().getWaterCost();
+        int fc = dest.getTerrain().getFoodCost();
+        strength -= mc; water -= wc; food -= fc;
+
+        // 2) Update location
         x = nx; y = ny;
+
+        // 3) Print cost breakdown
         System.out.printf("Moved %s to (%d,%d) — Cost: -S%d -W%d -F%d → Now S:%d W:%d F:%d%n",
-                d, x, y, mc, wc, fc, strength, water, food);
-    
-        // After moving, check what is on the square
-        System.out.println("Arrived on " + destination.getTerrain()
-                + " — Items: " + destination.getItems().size()
-                + " Trader: " + (destination.hasTrader() ? destination.getTrader().getType() : "none"));
-    
-        // Pickup items
-        if (!destination.getItems().isEmpty()) {
-            for (var item : destination.getItems()) {
-                item.applyTo(this);
-            }
-            destination.getItems().clear(); // clear after pickup
+                          d, x, y, mc, wc, fc, strength, water, food);
+
+        // 4) Describe square contents
+        System.out.println("Square terrain: " + dest.getTerrain()
+                         + " | Items: " + dest.getItems().size()
+                         + " | Trader: " + (dest.hasTrader() ? dest.getTrader().getType() : "none"));
+
+        // 5) Pickup any items
+        for (Item it : dest.getItems()) {
+            if (it instanceof GoldBonus)  System.out.println("I see some gold here!");
+            if (it instanceof FoodBonus)  System.out.println("I see some food here!");
+            if (it instanceof WaterBonus) System.out.println("I see some water here!");
+            it.applyTo(this);
         }
-    
-        // Optional: Trade if trader exists
-        if (destination.hasTrader()) {
-            tradeWith(destination.getTrader());
+        dest.getItems().clear();
+
+        // 6) Optionally trade
+        if (dest.hasTrader()) {
+            // the decision to trade or skip happens in takeTurn()
         }
-    }
-    private boolean inside(wss.world.Map m,int x,int y){
-        return x>=0&&y>=0&&x<m.getWidth()&&y<m.getHeight();
     }
 
     public void tradeWith(Trader t) {
-    if (t == null) return;
-    int offerGold = 0, offerFood = 0, offerWater = 1;   // trivial first offer
-
-    while (true) {
-        Trader.TradeResult res = t.negotiate(offerGold, offerFood, offerWater);
-        System.out.println("Trader ("+t.getType()+") replied: "+res);
-        switch (res) {
-            case ACCEPT -> {
-                water += offerWater;
-                food  -= offerFood;
-                gold  -= offerGold;
+        int offerGold  = 1;   // start by offering 1 gold
+    
+        while (true) {
+            // --- NEW: Prevent over-offering ---
+            if (offerGold > gold) {
+                System.out.println("You only have " + gold + " gold—can't offer " + offerGold + ". Trade cancelled.");
                 return;
             }
-            case REJECT -> { System.out.println("Trade ended."); return; }
-            case COUNTER -> { offerGold++; }   // raise gold, loop again
+    
+            Trader.TradeResult res = t.negotiate(offerGold, 0, 0);
+            System.out.println("Trader (" + t.getType() + ") replied: " + res);
+    
+            switch (res) {
+                case ACCEPT -> {
+                    System.out.println("Trade accepted. Exchanging " + offerGold + " gold for goods.");
+                    t.applyReward(this, offerGold);
+                    return;
+                }
+                case REJECT -> {
+                    System.out.println("Trader rejected the offer. Trade ended.");
+                    return;
+                }
+                case COUNTER -> {
+                    offerGold++;  // raise gold offer
+                    System.out.println("Trader countered—raising gold offer to " + offerGold);
+                }
+            }
         }
     }
-}
+    
 
 
-    private void consume() { strength--; water--; food--; }
+    private boolean canEnter(Square s) {
+        var t = s.getTerrain();
+        return strength >= t.getMovementCost()
+            && water    >= t.getWaterCost()
+            && food     >= t.getFoodCost();
+    }
 
-    // simple helpers used by Item
-    public void addFood(int f)  { food = Math.min(maxFood, food+f); }
-    public void addWater(int w) { water= Math.min(maxWater, water+w);}
-    public void addGold(int g)  { gold += g; }
+    private boolean inside(Map m, int x, int y) {
+        return x>=0 && y>=0 && x<m.getWidth() && y<m.getHeight();
+    }
 
-    // getters
-    public int getX(){return x;} public int getY(){return y;}
+    private void consume() {
+        // optional: additional per-turn drain
+        strength--; water--; food--;
+    }
 
-    public int getFood()     { return food; }
-    public int getWater()    { return water; }
+    // helpers for Item.applyTo(...)
+    public void addFood(int f)   { food     = Math.min(maxFood, food + f); }
+    public void addWater(int w)  { water    = Math.min(maxWater, water + w); }
+    public void addGold(int g)   { gold     = Math.max(0, gold + g); }
+
+    // getters for Brain & Vision
+    public int getX()     { return x; }
+    public int getY()     { return y; }
+    public int getFood()  { return food; }
+    public int getWater() { return water; }
     public int getStrength() { return strength; }
-    public Vision getVision(){ return vision; }
+    public int getGold()     { return gold; }
+    public Vision getVision() { return vision; }
 }
