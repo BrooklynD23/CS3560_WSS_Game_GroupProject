@@ -57,4 +57,5 @@ public class Trader {
     }
 
     public TraderType getType() { return type; }
+    public int getRewardPerGold()    {return rewardPerGold; }
 }

@@ -28,26 +28,34 @@ public class WSS {
             try {
                 difficulty = DifficultyLevel.valueOf(scanner.nextLine().trim().toUpperCase());
             } catch (IllegalArgumentException e) {
-                System.out.println("Invalid choice. Try again.");
+                System.out.println("[ERROR] Invalid choice. Try again.");
             }
         }
         
         // 3) Prompt for vision type
-        System.out.println("Choose vision type (FULL, CAUTIOUS, DIAGONAL): ");
-        String visionChoice = scanner.nextLine().trim().toUpperCase();
-        Vision vision = switch (visionChoice){
-            case "CAUTIOUS" -> new CautiousVision();
-            case "DIAGONAL" -> new DiagonalVision();
-            default -> new FullVision();
-        };
+        Vision vision = null;
+        while (vision == null) {
+            System.out.println("Choose vision type (FULL, CAUTIOUS, DIAGONAL):");
+            String choice = scanner.nextLine().trim().toUpperCase();
+            switch (choice) {
+                case "FULL" -> vision = new FullVision();
+                case "CAUTIOUS" -> vision = new CautiousVision();
+                case "DIAGONAL" -> vision = new DiagonalVision();
+                default -> System.out.println("[ERROR] Invalid vision type.");
+            }
+        }
 
         // 4) Build map and player
         Map gameMap = new Map(width, height, difficulty);
         Player player = new Player(0, 0, new ConservativeBrain(), vision);
 
         // 5) Print initial player stats
-        System.out.printf("Game start — Player at (0,0)  Strength:%d  Food:%d  Water:%d  Gold:%d%n",
-                          player.getStrength(), player.getFood(), player.getWater(), player.getGold());
+        System.out.printf("""
+            \n[START] Game Start
+            Player Position: (0,0)
+            Strength: %d | Food: %d | Water: %d | Gold: %d
+            ------------------------------%n""",
+                player.getStrength(), player.getFood(), player.getWater(), player.getGold());
 
         // 6) Main loop
         final int MAX_TURNS = 200;
@@ -56,11 +64,11 @@ public class WSS {
             player.takeTurn(gameMap);
 
             if (player.getX() == gameMap.getWidth() - 1) {
-                System.out.println("Reached east edge! You win.");
+                System.out.println("[VICTORY] Reached east edge! You win.");
                 break;
             }
             if (player.getStrength() <= 0 || player.getWater() <= 0 || player.getFood() <= 0) {
-                System.out.println("Out of resources. Game over.");
+                System.out.println("[GAME OVER] Out of resources. Game over.");
                 break;
             }
         }
