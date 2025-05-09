@@ -14,9 +14,9 @@ import wss.world.item.WaterBonus;
 
 public class Player {
     private int x, y;
-    private int maxStrength = 10, strength = 20;
-    private int maxWater    = 10,    water    = 20;
-    private int maxFood     = 10,    food     = 20;
+    private int maxStrength = 20, strength = 20;
+    private int maxWater    = 20,    water    = 20;
+    private int maxFood     = 20,    food     = 20;
     private int gold        = 5;
 
     private final Brain   brain;
@@ -36,22 +36,13 @@ public class Player {
         Direction dir = brain.makeMove(this, map);
         move(dir, map);
 
-        // 2) Status report
-        System.out.printf("""
-            \n[STATUS] Position (%d,%d)
-            -> Strength: %d
-            -> Food:     %d
-            -> Water:    %d
-            -> Gold:     %d
-            ------------------------------%n""", x, y, strength, food, water, gold);
-
-
+        // 2) Info about tile
         Square sq = map.getSquare(x, y);
-        System.out.println("[INFO] This location is - Terrain: " + sq.getTerrain().getClass().getSimpleName());
+        System.out.println("\n[INFO] This location is - Terrain: " + sq.getTerrain().getClass().getSimpleName());
 
-        // 3) Trade logic: only if low supplies AND you actually have gold
+        // 3) Trade logic:  Triggered only if low supplies AND you actually have gold
         if (sq.hasTrader()) {
-            System.out.println("[INFO] A Trader is here (" + sq.getTrader().getType() + ").");
+            System.out.println("\n[INFO] A Trader is here (" + sq.getTrader().getType() + ").");
             if (food > 3 && water > 3) {
                 System.out.println("[INFO] I have enough supplies. Skipping trade.");
             } else if (gold > 0) {
@@ -62,8 +53,20 @@ public class Player {
             }
         }
 
-        // 4) End-of-turn resource drain so we eventually run out
+        // 4) End-of-turn resource drain (AFTER pickup and report) so we eventually run out
+        System.out.println("\n[DRAIN]");
+        System.out.println("-> Daily survival drain: -1 Strength, -1 Water, -1 Food");
         consume();  // strength--, water--, food--
+
+        // 5) Status report after drain
+        System.out.println("\n[STATUS]");
+        System.out.printf("-> Position: (%d,%d)%n", x, y);
+        System.out.printf("-> Strength: %d%n", strength);
+        System.out.printf("-> Food:     %d%n", food);
+        System.out.printf("-> Water:    %d%n", water);
+        System.out.printf("-> Gold:     %d%n", gold);
+        System.out.println("------------------------------");
+
         System.out.println("--Turn ends.--\n");
     }
 
@@ -82,6 +85,7 @@ public class Player {
         }
 
         // 1) Deduct terrain costs
+        System.out.println("\n[MOVE]");
         int mc = dest.getTerrain().getMovementCost();
         int wc = dest.getTerrain().getWaterCost();
         int fc = dest.getTerrain().getFoodCost();
@@ -92,15 +96,18 @@ public class Player {
         x = nx; y = ny;
 
         // 3) Print cost breakdown
-        System.out.printf("[MOVE] Moved %s to (%d,%d) | Cost: -S%d -W%d -F%d -> Now S:%d W:%d F:%d%n",
+        System.out.printf("[MOVE] Moved %s to (%d,%d) | **! Cost: [-S%d] [-W%d] [-F%d] !** \n-> Now: [S:%d] [W:%d] [F:%d]%n",
                           d, x, y, mc, wc, fc, strength, water, food);
 
         // 4) Describe square contents
-        System.out.println("[TILE] Square terrain: " + dest.getTerrain()
+        System.out.println("\n[TILE] Square terrain: " + dest.getTerrain()
                          + " | Items: " + dest.getItems().size()
                          + " | Trader: " + (dest.hasTrader() ? dest.getTrader().getType() : "none"));
 
         // 5) Pickup any items
+        if (!dest.getItems().isEmpty()) {
+            System.out.println("\n[PICKUPS]");
+         }   
         for (Item it : dest.getItems()) {
             if (it instanceof GoldBonus)  System.out.println("[GOLD] I found some gold here!");
             if (it instanceof FoodBonus)  System.out.println("[FOOD] I sound some food here!");
@@ -109,7 +116,8 @@ public class Player {
         }
         dest.getItems().clear();
 
-        // 6) Optionally trade
+
+        // 7) Optionally trade
         if (dest.hasTrader()) {
             // the decision to trade or skip happens in takeTurn()
         }
@@ -122,13 +130,13 @@ public class Player {
 
         //What player OFFERS:
         //Gold offer
-        System.out.println("Enter gold to offer: ");
+        System.out.println("[QUESTION] Enter gold to offer: ");
         int offerGold = Integer.parseInt(sc.nextLine().trim());
         //Food offer
-        System.out.print("Enter food to offer: ");
+        System.out.print("[QUESTION] Enter food to offer: ");
         int offerFood = Integer.parseInt(sc.nextLine().trim());
         //Water offer
-        System.out.print("Enter water to offer: ");
+        System.out.print("[QUESTION] Enter water to offer: ");
         int offerWater = Integer.parseInt(sc.nextLine().trim());
 
 
@@ -159,23 +167,26 @@ public class Player {
                         addFood(reward);
                     }
 
-                    System.out.println("[SUCCESS] Trader gives you " + reward + " " + rewardType + ".");
+                    System.out.println("[TRADE SUCCESS] Trader gives you " + reward + " " + rewardType + ".");
                     return;
                 }
 
                 case REJECT -> {
-                    System.out.println("[FAILURE] Trader rejected the deal. Trade ended.");
+                    System.out.println("[TRADE FAILED] Trader rejected the deal. Trade ended.");
                     return;
                 }
+
                 case COUNTER -> {
-                    System.out.printf("[COUNTER] Trader wants more. Current offer — Gold:%d Food:%d Water:%d%n",
-                                    offerGold, offerFood, offerWater);
+                    System.out.printf("[COUNTER] Trader wants more.");
+                    System.out.printf("→ Current offer: Gold: %d, Food: %d, Water: %d%n", offerGold, offerFood, offerWater);
+
+                    //update offer
                     System.out.println("Adjust your offer:");
-                    System.out.print("[GOLD] New offer - Increase gold to: ");
+                    System.out.print("[INPUT] New offer - Increase gold to: ");
                     offerGold = Integer.parseInt(sc.nextLine().trim());
-                    System.out.print("[FOOD] New offer - Increase food to: ");
+                    System.out.print("[INPUT] New offer - Increase food to: ");
                     offerFood = Integer.parseInt(sc.nextLine().trim());
-                    System.out.print("[WATER] New offer - Increase water to: ");
+                    System.out.print("[INPUT] New offer - Increase water to: ");
                     offerWater = Integer.parseInt(sc.nextLine().trim());
                 }
             }
@@ -197,8 +208,9 @@ public class Player {
     }
 
     private void consume() {
-        // optional: additional per-turn drain
-        strength--; water--; food--;
+        strength = Math.max(0, strength - 1);
+        water = Math.max(0, water - 1);
+        food = Math.max(0, food - 1);
     }
 
     // helpers for Item.applyTo(...)

@@ -28,7 +28,7 @@ public class WSS {
             try {
                 difficulty = DifficultyLevel.valueOf(scanner.nextLine().trim().toUpperCase());
             } catch (IllegalArgumentException e) {
-                System.out.println("[ERROR] Invalid choice. Try again.");
+                System.out.println("[ERROR] Invalid input. Please try again.");
             }
         }
         
@@ -54,13 +54,13 @@ public class WSS {
             \n[START] Game Start
             Player Position: (0,0)
             Strength: %d | Food: %d | Water: %d | Gold: %d
-            ------------------------------%n""",
+            -----------------------------------------------%n""",
                 player.getStrength(), player.getFood(), player.getWater(), player.getGold());
 
         // 6) Main loop
         final int MAX_TURNS = 200;
         for (int turn = 0; turn < MAX_TURNS; turn++) {
-            System.out.println("\n=== TURN " + turn + " ===");
+            System.out.println("\n====== TURN " + turn + " ======");
             player.takeTurn(gameMap);
 
             if (player.getX() == gameMap.getWidth() - 1) {
