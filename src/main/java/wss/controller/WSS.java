@@ -1,13 +1,14 @@
 package wss.controller;
 
-import wss.util.*;
-import wss.world.Map;
-
 import java.util.Scanner;
-
 import wss.actor.*;
 import wss.actor.brain.ConservativeBrain;
+import wss.actor.vision.CautiousVision;
+import wss.actor.vision.DiagonalVision;
 import wss.actor.vision.FullVision;
+import wss.actor.vision.Vision;
+import wss.util.*;
+import wss.world.Map;
 
 public class WSS {
     public static void main(String[] args) {
@@ -16,6 +17,7 @@ public class WSS {
         // 1) Prompt for map size
         System.out.println("Enter map width:");
         int width  = Integer.parseInt(scanner.nextLine().trim());
+
         System.out.println("Enter map height:");
         int height = Integer.parseInt(scanner.nextLine().trim());
 
@@ -29,16 +31,25 @@ public class WSS {
                 System.out.println("Invalid choice. Try again.");
             }
         }
+        
+        // 3) Prompt for vision type
+        System.out.println("Choose vision type (FULL, CAUTIOUS, DIAGONAL): ");
+        String visionChoice = scanner.nextLine().trim().toUpperCase();
+        Vision vision = switch (visionChoice){
+            case "CAUTIOUS" -> new CautiousVision();
+            case "DIAGONAL" -> new DiagonalVision();
+            default -> new FullVision();
+        };
 
-        // 3) Build map and player
+        // 4) Build map and player
         Map gameMap = new Map(width, height, difficulty);
-        Player player = new Player(0, 0, new ConservativeBrain(), new FullVision());
+        Player player = new Player(0, 0, new ConservativeBrain(), vision);
 
-        // 4) Print initial player stats
+        // 5) Print initial player stats
         System.out.printf("Game start — Player at (0,0)  Strength:%d  Food:%d  Water:%d  Gold:%d%n",
                           player.getStrength(), player.getFood(), player.getWater(), player.getGold());
 
-        // 5) Main loop
+        // 6) Main loop
         final int MAX_TURNS = 200;
         for (int turn = 0; turn < MAX_TURNS; turn++) {
             System.out.println("\n=== TURN " + turn + " ===");

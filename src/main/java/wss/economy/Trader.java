@@ -28,30 +28,32 @@ public class Trader {
 
     /** Decides ACCEPT / COUNTER / REJECT based on offer size & patience */
     public TradeResult negotiate(int goldOffered, int foodOffered, int waterOffered) {
-        if (goldOffered >= 1) {
-            // if they offer ≥1 gold, that's enough to accept
-            return TradeResult.ACCEPT;
-        }
-        if (--patience <= 0) {
-            return TradeResult.REJECT;
-        }
+        int total = goldOffered + foodOffered + waterOffered;
+
+        if (total >= 2) return TradeResult.ACCEPT;
+        if (--patience <= 0) return TradeResult.REJECT;
+
         return TradeResult.COUNTER;
     }
 
     /** Called when trader accepts: applies the exchange to the player */
-    public void applyReward(Player p, int goldPaid) {
-        // subtract the gold
-        p.addGold(-goldPaid);
+    public void applyReward(Player p, int goldPaid, int foodPaid, int waterPaid) {
+        int total = goldPaid + foodPaid + waterPaid;
+        int reward = total * rewardPerGold;
 
-        // give the resource
-        int amount = goldPaid * rewardPerGold;
+        // subtract offered items
+        p.addGold(-goldPaid);
+        p.addFood(-foodPaid);
+        p.addWater(-waterPaid);
+
+        // grant reward
         if (rewardResource.equals("water")) {
-            p.addWater(amount);
+            p.addWater(reward);
         } else {
-            p.addFood(amount);
+            p.addFood(reward);
         }
-        System.out.println("Trader gives you " + amount + " " + rewardResource + " for "
-                           + goldPaid + " gold.");
+        System.out.println("Trader gives you " + reward + " " + rewardResource + " for your offer (G: "
+                           + goldPaid + ", F: " + foodPaid + ", W: " + waterPaid + ").");
     }
 
     public TraderType getType() { return type; }

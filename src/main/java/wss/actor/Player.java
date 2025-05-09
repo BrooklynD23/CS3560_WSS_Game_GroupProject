@@ -1,18 +1,16 @@
 package wss.actor;
 
+import java.util.Scanner;
 import wss.actor.brain.Brain;
 import wss.actor.vision.Vision;
 import wss.economy.Trader;
-import wss.economy.Trader.TradeResult;
 import wss.util.Direction;
-import wss.world.Square;
 import wss.world.Map;
+import wss.world.Square;
 import wss.world.item.FoodBonus;
-import wss.world.item.WaterBonus;
 import wss.world.item.GoldBonus;
 import wss.world.item.Item;
-
-import java.util.List;
+import wss.world.item.WaterBonus;
 
 public class Player {
     private int x, y;
@@ -22,7 +20,7 @@ public class Player {
     private int gold        = 5;
 
     private final Brain   brain;
-    private final Vision  vision;
+    private Vision  vision;
 
     public Player(int startX, int startY, Brain b, Vision v) {
         this.x = startX; 
@@ -31,7 +29,7 @@ public class Player {
         this.vision = v;
     }
 
-    // In Player.java, replace your takeTurn method with:
+
 
     public void takeTurn(Map map) {
         // 1) Decide & move
@@ -41,6 +39,7 @@ public class Player {
         // 2) Status report
         System.out.printf("Player enters square %d,%d, Strength:%d, Food:%d, Water:%d, Gold:%d%n",
                         x, y, strength, food, water, gold);
+
         Square sq = map.getSquare(x, y);
         System.out.println("This location is " + sq.getTerrain().getClass().getSimpleName());
 
@@ -79,6 +78,7 @@ public class Player {
         int mc = dest.getTerrain().getMovementCost();
         int wc = dest.getTerrain().getWaterCost();
         int fc = dest.getTerrain().getFoodCost();
+        
         strength -= mc; water -= wc; food -= fc;
 
         // 2) Update location
@@ -109,36 +109,48 @@ public class Player {
     }
 
     public void tradeWith(Trader t) {
-        int offerGold  = 1;   // start by offering 1 gold
-    
+        Scanner sc = new Scanner(System.in);
+        int offerGold = 1;
+        int offerFood = 0;
+        int offerWater = 0;
+
         while (true) {
-            // --- NEW: Prevent over-offering ---
-            if (offerGold > gold) {
-                System.out.println("You only have " + gold + " gold—can't offer " + offerGold + ". Trade cancelled.");
+            if (offerGold > gold || offerFood > food || offerWater > water) {
+                System.out.println("Not enough resources for this offer. Trade canceled.");
                 return;
             }
-    
-            Trader.TradeResult res = t.negotiate(offerGold, 0, 0);
-            System.out.println("Trader (" + t.getType() + ") replied: " + res);
-    
+
+            Trader.TradeResult res = t.negotiate(offerGold, offerFood, offerWater);
+            System.out.printf("Trader (%s) replied: %s%n", t.getType(), res);
+
             switch (res) {
                 case ACCEPT -> {
-                    System.out.println("Trade accepted. Exchanging " + offerGold + " gold for goods.");
-                    t.applyReward(this, offerGold);
+                    gold -= offerGold;
+                    food -= offerFood;
+                    water -= offerWater;
+                    t.applyReward(this, offerGold, offerFood, offerWater);
                     return;
                 }
                 case REJECT -> {
-                    System.out.println("Trader rejected the offer. Trade ended.");
+                    System.out.println("Trader rejected the deal. Trade ended.");
                     return;
                 }
                 case COUNTER -> {
-                    offerGold++;  // raise gold offer
-                    System.out.println("Trader countered—raising gold offer to " + offerGold);
+                    System.out.printf("Trader wants more. Current offer — Gold:%d Food:%d Water:%d%n",
+                                    offerGold, offerFood, offerWater);
+                    System.out.println("Adjust your offer:");
+                    System.out.print("Increase gold to: ");
+                    offerGold = Integer.parseInt(sc.nextLine().trim());
+                    System.out.print("Increase food to: ");
+                    offerFood = Integer.parseInt(sc.nextLine().trim());
+                    System.out.print("Increase water to: ");
+                    offerWater = Integer.parseInt(sc.nextLine().trim());
                 }
             }
         }
     }
-    
+
+
 
 
     private boolean canEnter(Square s) {
@@ -170,4 +182,5 @@ public class Player {
     public int getStrength() { return strength; }
     public int getGold()     { return gold; }
     public Vision getVision() { return vision; }
+    public void setVision(Vision v) { this.vision = v; } // Optional for switching vision
 }
