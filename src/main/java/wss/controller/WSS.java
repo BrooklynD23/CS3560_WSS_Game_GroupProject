@@ -48,15 +48,16 @@ public class WSS {
         // 4) Prompt for brain type
         Brain brain = null;
         while (brain == null) {
-            System.out.println("Choose brain type (CONSERVATIVE, RESOURCE, RISK, GREEDY, SURVIVOR):");
+            System.out.println("Choose brain type (CONSERVATIVE, GREEDY, RESOURCE, RISKY, SURVIVOR, ADAPTIVE):");
             String choice = scanner.nextLine().trim().toUpperCase();
             switch (choice) {
                 case "CONSERVATIVE" -> brain = new ConservativeBrain();
-                case "RESOURCE"     -> brain = new ResourceOptimizingBrain();
-                case "RISK"         -> brain = new RiskTakingBrain();
                 case "GREEDY"       -> brain = new GreedyBrain();
+                case "RESOURCE"     -> brain = new ResourceOptimizingBrain();
+                case "RISKY"        -> brain = new RiskTakingBrain();
                 case "SURVIVOR"     -> brain = new SurvivorBrain();
-                default -> System.out.println("[ERROR] Invalid brain type.");
+                case "ADAPTIVE"     -> brain = new AdaptiveBrain();
+                default             -> System.out.println("[ERROR] Invalid brain type.");
             }
         }
         System.out.println("[CONFIG] Brain mode set to: " + brain.getClass().getSimpleName()); // Confirmation output after brain selection
