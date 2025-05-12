@@ -96,7 +96,7 @@ public class Player {
         x = nx; y = ny;
 
         // 3) Print cost breakdown
-        System.out.printf("[MOVE] Moved %s to (%d,%d) | **! Cost: [-S%d] [-W%d] [-F%d] !** \n-> Now: [S:%d] [W:%d] [F:%d]%n",
+        System.out.printf("[MOVE] Moved %s to (%d,%d) | ** Cost: [-S%d] [-W%d] [-F%d] ** \n-> Now: [S:%d] [W:%d] [F:%d]%n",
                           d, x, y, mc, wc, fc, strength, water, food);
 
         // 4) Describe square contents
