@@ -14,7 +14,7 @@ import wss.world.item.WaterBonus;
 
 public class Player {
     private int x, y;
-    private int maxStrength = 20, strength = 20;
+    private int maxStrength = 25, strength = 25;
     private int maxWater    = 20,    water    = 20;
     private int maxFood     = 20,    food     = 20;
     private int gold        = 5;
@@ -43,7 +43,7 @@ public class Player {
         // 3) Trade logic:  Triggered only if low supplies AND you actually have gold
         if (sq.hasTrader()) {
             System.out.println("\n[INFO] A Trader is here (" + sq.getTrader().getType() + ").");
-            if (food > 3 && water > 3) {
+            if (food > 8 && water > 8 && strength > 8) { //skip trade only when all supplies are good.
                 System.out.println("[INFO] I have enough supplies. Skipping trade.");
             } else if (gold > 0) {
                 System.out.println("[ACTION] Supplies low. Attempting trade... - Let's trade!");
@@ -84,27 +84,33 @@ public class Player {
             return;
         }
 
-        // 1) Deduct terrain costs
-        System.out.println("\n[MOVE]");
+        System.out.println("\n[LOCATION]");
+
+
+
+
+        // 1) Calculate terrain costs
         int mc = dest.getTerrain().getMovementCost();
         int wc = dest.getTerrain().getWaterCost();
         int fc = dest.getTerrain().getFoodCost();
         
-        strength -= mc; water -= wc; food -= fc;
-
+        
         // 2) Update location
         x = nx; y = ny;
 
-        // 3) Print cost breakdown
-        System.out.printf("[MOVE] Moved %s to (%d,%d) | ** Cost: [-S%d] [-W%d] [-F%d] ** \n-> Now: [S:%d] [W:%d] [F:%d]%n",
-                          d, x, y, mc, wc, fc, strength, water, food);
-
-        // 4) Describe square contents
+        // 3) Announce the terrain before applying cost
         System.out.println("\n[TILE] Square terrain: " + dest.getTerrain()
                          + " | Items: " + dest.getItems().size()
-                         + " | Trader: " + (dest.hasTrader() ? dest.getTrader().getType() : "none"));
+                         + " | Trader: " + (dest.hasTrader() ? dest.getTrader().getType() : "none"));        
 
-        // 5) Pickup any items
+        //4)  Apply resource costs
+        strength -= mc; water -= wc; food -= fc;        
+
+        // 5) Print cost breakdown
+        System.out.printf("[MOVED] Moved %s to (%d,%d) | ** Cost: [-S%d] [-W%d] [-F%d] ** \n-> Now: [S:%d] [W:%d] [F:%d]%n",
+                          d, x, y, mc, wc, fc, strength, water, food);
+
+        // 6) Pickup any items
         if (!dest.getItems().isEmpty()) {
             System.out.println("\n[PICKUPS]");
          }   
@@ -117,7 +123,7 @@ public class Player {
         dest.getItems().clear();
 
 
-        // 7) Optionally trade
+        // 5) Optionally trade
         if (dest.hasTrader()) {
             // the decision to trade or skip happens in takeTurn()
         }
@@ -127,6 +133,7 @@ public class Player {
         Scanner sc = new Scanner(System.in);
 
         System.out.println("\n--- TRADE INITIATED ---");
+        System.out.printf("[INFO] You currently have — Gold: %d | Food: %d | Water: %d%n%n", gold, food, water); //reprinting amount of resources user has for reference
 
         //What player OFFERS:
         //Gold offer
@@ -214,8 +221,17 @@ public class Player {
     }
 
     // helpers for Item.applyTo(...)
-    public void addFood(int f)   { food     = Math.min(maxFood, food + f); }
-    public void addWater(int w)  { water    = Math.min(maxWater, water + w); }
+    //Adding strength recovery
+    public void addFood(int f) {
+        food = Math.min(maxFood, food + f);
+        strength = Math.min(maxStrength, strength + f / 2); // 1 strength per 2 food 
+    }
+
+    public void addWater(int w) {
+        water = Math.min(maxWater, water + w);
+        strength = Math.min(maxStrength, strength + w / 3); // 1 strength per 3 water
+    }
+
     public void addGold(int g)   { gold     = Math.max(0, gold + g); }
 
     // getters for Brain & Vision

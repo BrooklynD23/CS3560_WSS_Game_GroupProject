@@ -2,11 +2,8 @@ package wss.controller;
 
 import java.util.Scanner;
 import wss.actor.*;
-import wss.actor.brain.ConservativeBrain;
-import wss.actor.vision.CautiousVision;
-import wss.actor.vision.DiagonalVision;
-import wss.actor.vision.FullVision;
-import wss.actor.vision.Vision;
+import wss.actor.brain.*; 
+import wss.actor.vision.*;
 import wss.util.*;
 import wss.world.Map;
 
@@ -31,25 +28,44 @@ public class WSS {
                 System.out.println("[ERROR] Invalid input. Please try again.");
             }
         }
+        System.out.println("[CONFIG] Difficulty level mode set to: " + difficulty.getClass().getSimpleName()); // Confirmation output after difficulty selection
         
         // 3) Prompt for vision type
         Vision vision = null;
         while (vision == null) {
-            System.out.println("Choose vision type (FULL, CAUTIOUS, DIAGONAL):");
+            System.out.println("Choose vision type (FULL, CAUTIOUS, DIAGONAL, RANDOM):");
             String choice = scanner.nextLine().trim().toUpperCase();
             switch (choice) {
                 case "FULL" -> vision = new FullVision();
                 case "CAUTIOUS" -> vision = new CautiousVision();
                 case "DIAGONAL" -> vision = new DiagonalVision();
+                case "RANDOM"    -> vision = new RandomVision();
                 default -> System.out.println("[ERROR] Invalid vision type.");
             }
         }
+        System.out.println("[CONFIG] Vision mode set to: " + vision.getClass().getSimpleName()); // Confirmation output after vision selection
 
-        // 4) Build map and player
+        // 4) Prompt for brain type
+        Brain brain = null;
+        while (brain == null) {
+            System.out.println("Choose brain type (CONSERVATIVE, RESOURCE, RISK, GREEDY, SURVIVOR):");
+            String choice = scanner.nextLine().trim().toUpperCase();
+            switch (choice) {
+                case "CONSERVATIVE" -> brain = new ConservativeBrain();
+                case "RESOURCE"     -> brain = new ResourceOptimizingBrain();
+                case "RISK"         -> brain = new RiskTakingBrain();
+                case "GREEDY"       -> brain = new GreedyBrain();
+                case "SURVIVOR"     -> brain = new SurvivorBrain();
+                default -> System.out.println("[ERROR] Invalid brain type.");
+            }
+        }
+        System.out.println("[CONFIG] Brain mode set to: " + brain.getClass().getSimpleName()); // Confirmation output after brain selection
+
+        // 5) Build map and player
         Map gameMap = new Map(width, height, difficulty);
-        Player player = new Player(0, 0, new ConservativeBrain(), vision);
+        Player player = new Player(0, 0, brain, vision);
 
-        // 5) Print initial player stats
+        // 6) Print initial player stats
         System.out.printf("""
             \n[START] Game Start
             Player Position: (0,0)
@@ -57,10 +73,10 @@ public class WSS {
             -----------------------------------------------%n""",
                 player.getStrength(), player.getFood(), player.getWater(), player.getGold());
 
-        // 6) Main loop
+        // 7) Main loop
         final int MAX_TURNS = 200;
         for (int turn = 0; turn < MAX_TURNS; turn++) {
-            System.out.println("\n====== TURN " + turn + " ======");
+            System.out.println("\n================= TURN " + turn + " =================");
             player.takeTurn(gameMap);
 
             if (player.getX() == gameMap.getWidth() - 1) {

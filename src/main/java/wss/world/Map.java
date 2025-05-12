@@ -1,5 +1,6 @@
 package wss.world;
 
+import java.util.Random;
 import wss.economy.Trader;
 import wss.economy.TraderType;
 import wss.util.DifficultyLevel;
@@ -8,8 +9,6 @@ import wss.world.item.GoldBonus;
 import wss.world.item.Item;
 import wss.world.item.WaterBonus;
 import wss.world.terrain.*;
-
-import java.util.Random;
 
 public class Map {
     private final int width, height;
@@ -24,12 +23,12 @@ public class Map {
     private void generate(DifficultyLevel level) {
         Random rng = new Random();
     
-        double plainsProb, desertProb, mountainProb;
+        double plainsProb, desertProb, mountainProb, swampProb, snowProb; 
         switch (level) {
-            case EASY   -> { plainsProb = 0.6; desertProb = 0.2; mountainProb = 0.2; }
-            case MEDIUM -> { plainsProb = 0.2; desertProb = 0.5; mountainProb = 0.3; }
-            case HARD   -> { plainsProb = 0.2; desertProb = 0.2; mountainProb = 0.6; }
-            default    -> { plainsProb = 0.7; desertProb = 0.2; mountainProb = 0.1; }
+            case EASY   -> { plainsProb = 0.6; desertProb = 0.2; mountainProb = 0.2; swampProb = 0.1; snowProb = 0.1;}
+            case MEDIUM -> { plainsProb = 0.2; desertProb = 0.5; mountainProb = 0.3; swampProb = 0.15; snowProb = 0.15;}
+            case HARD   -> { plainsProb = 0.2; desertProb = 0.2; mountainProb = 0.6; swampProb = 0.2; snowProb = 0.2;}
+            default    -> { plainsProb = 0.7; desertProb = 0.2; mountainProb = 0.1; swampProb = 0.1; snowProb = 0.1;}
         }
     
         for (int y = 0; y < height; y++) {
@@ -42,9 +41,10 @@ public class Map {
                     t = new DesertTerrain();
                 } else if (r < plainsProb + desertProb + mountainProb) {
                     t = new MountainTerrain();
+                } else if (r < plainsProb + desertProb + mountainProb + swampProb) {
+                    t = new SwampTerrain();
                 } else {
-                    // In case of rounding errors
-                    t = new PlainsTerrain();
+                    t = new SnowTerrain();
                 }
                 Square sq = new Square(t);
     
