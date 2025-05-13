@@ -20,7 +20,7 @@ public abstract class Vision {
         List<VisibleSquare> seen = scan(map, x, y);
         System.err.println(getClass().getSimpleName() + " sees " + seen.size() + " squares for food search.");
 
-        Optional<VisibleSquare> target = scan(map, x, y).stream()
+        Optional<VisibleSquare> target = seen.stream()
                 .filter(vs -> vs.square().getItems().stream().anyMatch(Item::isFood))
                 .min((a, b) -> Integer.compare(a.distance(), b.distance()));
         return target.map(vs -> List.of(vs.firstStep())).orElseGet(ArrayList::new);
@@ -31,7 +31,7 @@ public abstract class Vision {
         List<VisibleSquare> seen = scan(map, x, y);
         System.out.println(getClass().getSimpleName() + " sees " + seen.size() + " squares for water search.");
 
-        Optional<VisibleSquare> target = scan(map, x, y).stream()
+        Optional<VisibleSquare> target = seen.stream()
                 .filter(vs -> vs.square().getItems().stream().anyMatch(Item::isWater))
                 .min((a, b) -> Integer.compare(a.distance(), b.distance()));
         return target.map(vs -> List.of(vs.firstStep())).orElseGet(ArrayList::new);
@@ -42,7 +42,7 @@ public abstract class Vision {
         List<VisibleSquare> seen = scan(map, x, y);
         System.out.println(getClass().getSimpleName() + " sees " + seen.size() + " squares for gold search.");
 
-        Optional<VisibleSquare> target = scan(map, x, y).stream()
+        Optional<VisibleSquare> target = seen.stream()
                 .filter(vs -> vs.square().getItems().stream().anyMatch(Item::isGold))
                 .min((a, b) -> Integer.compare(a.distance(), b.distance()));
         return target.map(vs -> List.of(vs.firstStep())).orElseGet(ArrayList::new);

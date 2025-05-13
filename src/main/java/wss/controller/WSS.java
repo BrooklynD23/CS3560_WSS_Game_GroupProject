@@ -12,28 +12,28 @@ public class WSS {
         Scanner scanner = new Scanner(System.in);
 
         // 1) Prompt for map size
-        System.out.println("Enter map width:");
+        System.out.print("Enter map width: ");
         int width  = Integer.parseInt(scanner.nextLine().trim());
 
-        System.out.println("Enter map height:");
+        System.out.print("Enter map height: ");
         int height = Integer.parseInt(scanner.nextLine().trim());
 
         // 2) Prompt for difficulty
         DifficultyLevel difficulty = null;
         while (difficulty == null) {
-            System.out.println("Choose difficulty level (EASY, MEDIUM, HARD):");
+            System.out.print("\nChoose difficulty level (EASY, MEDIUM, HARD): ");
             try {
                 difficulty = DifficultyLevel.valueOf(scanner.nextLine().trim().toUpperCase());
             } catch (IllegalArgumentException e) {
                 System.out.println("[ERROR] Invalid input. Please try again.");
             }
         }
-        System.out.println("[CONFIG] Difficulty level mode set to: " + difficulty.getClass().getSimpleName()); // Confirmation output after difficulty selection
+        System.out.println("[CONFIG] Difficulty level mode set to: " + difficulty.name()); // Confirmation output after difficulty selection
         
         // 3) Prompt for vision type
         Vision vision = null;
         while (vision == null) {
-            System.out.println("Choose vision type (FULL, CAUTIOUS, DIAGONAL, RANDOM):");
+            System.out.print("Choose vision type (FULL, CAUTIOUS, DIAGONAL, RANDOM): ");
             String choice = scanner.nextLine().trim().toUpperCase();
             switch (choice) {
                 case "FULL" -> vision = new FullVision();
@@ -48,7 +48,7 @@ public class WSS {
         // 4) Prompt for brain type
         Brain brain = null;
         while (brain == null) {
-            System.out.println("Choose brain type (CONSERVATIVE, GREEDY, RESOURCE, RISKY, SURVIVOR, ADAPTIVE):");
+            System.out.print("Choose brain type (CONSERVATIVE, GREEDY, RESOURCE, RISKY, SURVIVOR, ADAPTIVE): ");
             String choice = scanner.nextLine().trim().toUpperCase();
             switch (choice) {
                 case "CONSERVATIVE" -> brain = new ConservativeBrain();
@@ -68,7 +68,8 @@ public class WSS {
 
         // 6) Print initial player stats
         System.out.printf("""
-            \n[START] Game Start
+            \n-----------------------------------------------
+            [START] Game Start
             Player Position: (0,0)
             Strength: %d | Food: %d | Water: %d | Gold: %d
             -----------------------------------------------%n""",
@@ -77,8 +78,8 @@ public class WSS {
         // 7) Main loop
         final int MAX_TURNS = 200;
         for (int turn = 0; turn < MAX_TURNS; turn++) {
-            System.out.println("\n================= TURN " + turn + " =================");
-            player.takeTurn(gameMap);
+            System.out.println("\n=========================== TURN " + turn + " =============================");
+            player.takeTurn(turn, gameMap);
 
             if (player.getX() == gameMap.getWidth() - 1) {
                 System.out.println("[VICTORY] Reached east edge! You win.");
