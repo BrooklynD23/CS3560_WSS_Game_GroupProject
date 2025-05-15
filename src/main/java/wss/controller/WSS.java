@@ -65,6 +65,8 @@ public class WSS {
         // 5) Build map and player
         Map gameMap = new Map(width, height, difficulty);
         Player player = new Player(0, 0, brain, vision);
+        player.initExplorationMap(gameMap);
+        player.scaleSuppliesByMapSize(gameMap);
 
         // 6) Print initial player stats
         System.out.printf("""

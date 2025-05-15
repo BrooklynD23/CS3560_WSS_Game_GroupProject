@@ -22,6 +22,8 @@ public class Player {
     private final Brain   brain;
     private Vision  vision;
 
+    private boolean[][] explored;
+
     public Player(int startX, int startY, Brain b, Vision v) {
         this.x = startX; 
         this.y = startY;
@@ -29,12 +31,40 @@ public class Player {
         this.vision = v;
     }
 
+    public void initExplorationMap(Map map) {
+    explored = new boolean[map.getHeight()][map.getWidth()];
+    for (int row = 0; row < map.getHeight(); row++) {
+        for (int col = 0; col < map.getWidth(); col++) {
+            explored[row][col] = false;
+        }
+    }
+        explored[y][x] = true;
+    }   
 
+    public void scaleSuppliesByMapSize(Map map) {
+        int baseSupply = 25;
+        int minMapArea = 25;
+        int maxMapArea = 400;
+
+        int mapArea = map.getWidth() * map.getHeight();
+        int clampedArea = Math.max(minMapArea, Math.min(mapArea, maxMapArea));
+
+        double scaleFactor = 1.0 + (double)(clampedArea - minMapArea) / (maxMapArea - minMapArea);
+
+        this.maxStrength = (int)(baseSupply * scaleFactor);
+        this.maxWater = (int)(baseSupply * scaleFactor);
+        this.maxFood = (int)(baseSupply * scaleFactor);
+
+        this.strength = this.maxStrength;
+        this.water = this.maxWater;
+        this.food = this.maxFood;
+    }
 
     public void takeTurn(int turn, Map map) {
         // 1) Decide & move
         Direction dir = brain.makeMove(this, map);
         move(dir, map);
+        explored[y][x] = true;
 
         // 2) Info about tile
         Square sq = map.getSquare(x, y);
@@ -43,6 +73,9 @@ public class Player {
         // 3) Trade logic:  Triggered only if low supplies AND you actually have gold
         if (sq.hasTrader()) {
             System.out.println("\n[trade: INFO] A Trader is here (status: " + sq.getTrader().getType() + ").");
+
+            printMap(map);
+
             if (food > 8 && water > 8 && strength > 8) { //skip trade only when all supplies are good.
                 System.out.println("[trade: INFO] I have enough supplies. Skipping trade.");
             } else if (gold > 0) {
@@ -205,7 +238,22 @@ public class Player {
         }
     }
 
-
+    private void printMap(Map map) {
+    System.out.println("\n[MAP VIEW]");
+    for (int row = 0; row < map.getHeight(); row++) {
+        for (int col = 0; col < map.getWidth(); col++) {
+            if (x == col && y == row) {
+                System.out.print("X ");
+            } else if (explored[row][col]) {
+                System.out.print("- ");
+            } else {
+                System.out.print("/ ");
+            }
+        }
+        System.out.println();
+    }
+    System.out.println();
+}
 
 
     private boolean canEnter(Square s) {
