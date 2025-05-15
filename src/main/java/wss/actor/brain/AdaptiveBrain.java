@@ -20,6 +20,28 @@ public class AdaptiveBrain extends Brain {
     private final Brain survivor            = new SurvivorBrain();
     private final BrainSelectionConfig config = new BrainSelectionConfig();
 
+
+/**
+ * Selects the optimal brain strategy based on the player's current state and surroundings.
+ * 
+ * This method implements the core "adaptive" behavior by analyzing:
+ * - Current resource levels (strength, food, water)
+ * - Current gold amount
+ * - Distance to map edge (goal)
+ * 
+ * Based on these factors, it selects the most appropriate brain strategy:
+ * - SurvivorBrain: When resources are critically low (emergency mode)
+ * - ResourceOptimizingBrain: When resources are moderately low (cautious mode)
+ * - RiskTakingBrain: When close to the goal (sprint mode)
+ * - GreedyBrain: When gold is high (opportunity seeking mode)
+ * - ConservativeBrain: Default balanced approach
+ * 
+ * The thresholds for switching between strategies are configurable via BrainSelectionConfig.
+ *
+ * @param p The player entity containing current stats and position
+ * @param map The game map for spatial awareness and goal calculation
+ * @return Direction The calculated optimal move direction
+ */
     @Override
     public Direction makeMove(Player p, Map map) {
         int strength = p.getStrength();
