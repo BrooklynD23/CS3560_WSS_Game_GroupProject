@@ -4,9 +4,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+
+/**
+ * Centralized game configuration management system.
+ * 
+ * This class loads and provides access to configurable game parameters from
+ * an external properties file. The configuration system has: 
+ * 
+ * - Automatic loading on application startup
+ * - Backup to default values if the config file is missing
+ * - Type-safe accessor methods for different value types
+ * - Centralized default value definitions
+ * 
+ * Configuration is initialized once when the class is first referenced and
+ * remains constant throughout program execution
+ */
 public class GameConfig {
     private static Properties config = new Properties();
     
+    /**
+     * Static initializer passes configuration when the class is first accessed.
+     * 
+     * Sequence:
+     * 1. Attempts to load from "game.properties" in the classpath
+     * 2. If successful, uses provided values
+     * 3. If file is missing or invalid, falls back to default values
+     * 
+     */
+
     static {
         try (InputStream input = GameConfig.class.getClassLoader().getResourceAsStream("game.properties")) {
             if (input != null) {
@@ -20,7 +45,16 @@ public class GameConfig {
             setDefaults();
         }
     }
-    
+
+    /**
+     * Defines default values for all configurable game parameters.
+     * 
+     * These values are used when the external configuration file
+     * cannot be loaded or is missing specific properties.
+     * 
+     * ** This is the initial values we had for the program to work. 
+     *  However, we wanted to create an easier system to handle different configurations.
+     */
     private static void setDefaults() {
         // Player resources
         config.setProperty("player.maxStrength", "25");

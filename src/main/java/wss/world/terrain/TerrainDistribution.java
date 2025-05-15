@@ -56,6 +56,25 @@ public class TerrainDistribution {
         return probabilities.getOrDefault(terrainClass, 0.0);
     }
     
+
+    
+/**
+ * Purpose: to select and instantiate a random terrain type based on configured probabilities values.
+ * 
+ * 
+ * 1. Generates a random value between 0.0 and 1.0
+ * 2. Iterates through terrain types, accumulating their probability values
+ * 3. When the accumulated probability exceeds the random value, selects that terrain
+ *
+ * The algorithm ensures that terrain types with higher probability values are
+ * selected more frequently. For example, if PlainsTerrain has 0.6 probability and
+ * MountainTerrain has 0.2, then Plains will appear approximately 3 times as often.
+ *
+ * Error handling: If instantiation fails for any reason, defaults to PlainsTerrain
+ * as a safe fallback option.
+ *
+ * @return Terrain A new instance of the randomly selected terrain type  **/ 
+
     public Terrain getRandomTerrain() {
         double r = random.nextDouble();
         double cumulativeProbability = 0.0;
